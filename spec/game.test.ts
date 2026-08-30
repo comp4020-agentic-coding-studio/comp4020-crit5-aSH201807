@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { JSDOM } from "jsdom";
 import { describe, expect, it } from "vitest";
-import { createGame, press, tick } from "../game-logic.ts";
+import { createGame, press, startTimeAttack, tick, TIME_ATTACK_DURATION_MS } from "../game-logic.ts";
 
 // Contract tests for crit 5 ("A game"). These answer the published spec at
 // https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/crits/05-game/
@@ -92,5 +92,46 @@ describe("losable: play can end in a win, loss, or finish", () => {
     }
 
     expect(state.status).toBe("won");
+  });
+});
+
+describe("time attack: a second mode, clock-driven instead of lives-driven", () => {
+  it("misses don't end a time-attack round", () => {
+    let state = createGame();
+    let now = 0;
+    state = startTimeAttack(state, now);
+
+    for (let i = 0; i < 10; i++) {
+      const wrongLane = (state.activeLane! + 1) % 3;
+      now += 1;
+      state = press(state, wrongLane, now);
+    }
+
+    expect(state.status).toBe("playing");
+    expect(state.misses).toBe(10);
+  });
+
+  it("the round ends once the clock runs out, regardless of misses", () => {
+    let state = createGame();
+    state = startTimeAttack(state, 0);
+
+    state = tick(state, TIME_ATTACK_DURATION_MS + 1);
+
+    expect(state.status).toBe("finished");
+  });
+
+  it("the final score is the number of catches landed", () => {
+    let state = createGame();
+    let now = 0;
+    state = startTimeAttack(state, now);
+
+    for (let i = 0; i < 5; i++) {
+      now += 1;
+      state = press(state, state.activeLane!, now);
+    }
+    state = tick(state, TIME_ATTACK_DURATION_MS + now + 1);
+
+    expect(state.status).toBe("finished");
+    expect(state.score).toBe(5);
   });
 });

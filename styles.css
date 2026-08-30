@@ -114,6 +114,76 @@ a {
   display: inline-block;
 }
 
+/* Time-attack round clock: only shown once that mode is actually running. */
+#timer-bar {
+  display: none;
+  width: 10rem;
+  height: 0.35rem;
+  background: #eee;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+#game[data-mode="timeAttack"][data-status="playing"] #timer-bar {
+  display: block;
+}
+
+#timer-bar > div {
+  height: 100%;
+  width: 100%;
+  background: crimson;
+  transform-origin: left;
+}
+
+#timer-bar.running > div {
+  animation: drain var(--round-duration, 30000ms) linear forwards;
+}
+
+/* Live catch count, feedback rather than instruction — numbers, not text. */
+#score {
+  display: none;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+#game[data-mode="timeAttack"] #score {
+  display: block;
+}
+
+/* The hourglass is the entire "menu": a second, visually distinct way to
+   start a round, so a stranger isn't stuck with only one mode. */
+.mode-timeattack {
+  appearance: none;
+  background: none;
+  padding: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 2px dashed #ccc;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.mode-timeattack:hover,
+.mode-timeattack:focus-visible {
+  border-color: crimson;
+}
+
+.hourglass {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: none;
+  stroke: #aaa;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 #game[data-status="ready"] .cat {
   animation: idle-bounce 1.6s ease-in-out infinite;
 }
@@ -135,7 +205,8 @@ a {
 }
 
 #game[data-status="lost"] .lane,
-#game[data-status="won"] .lane {
+#game[data-status="won"] .lane,
+#game[data-status="finished"] .lane {
   opacity: 0.4;
 }
 
@@ -215,6 +286,12 @@ a {
   to {
     transform: rotate(90deg) translateY(20px);
     opacity: 0.6;
+  }
+}
+
+@keyframes drain {
+  to {
+    transform: scaleX(0);
   }
 }
 

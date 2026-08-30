@@ -1,9 +1,19 @@
-import { createGame, press, tick, type GameState } from "./game-logic.ts";
+import {
+  createGame,
+  press,
+  startTimeAttack,
+  tick,
+  TIME_ATTACK_DURATION_MS,
+  type GameState,
+} from "./game-logic.ts";
 
 const gameEl = document.querySelector<HTMLElement>("#game")!;
 const laneEls = Array.from(gameEl.querySelectorAll<HTMLElement>(".lane"));
 const catEl = gameEl.querySelector<HTMLElement>(".cat")!;
 const outcomeEl = document.querySelector<HTMLElement>("#outcome")!;
+const timeAttackBtn = document.querySelector<HTMLButtonElement>(".mode-timeattack")!;
+const timerBarEl = document.querySelector<HTMLElement>("#timer-bar")!;
+const scoreEl = document.querySelector<HTMLElement>("#score")!;
 
 const KEY_TO_LANE: Record<string, number> = {
   ArrowLeft: 0,
@@ -36,6 +46,18 @@ function flash(lane: HTMLElement, kind: "catch" | "miss"): void {
 
 function render(previous: GameState): void {
   gameEl.dataset.status = state.status;
+  gameEl.dataset.mode = state.mode;
+
+  if (state.mode === "timeAttack") {
+    scoreEl.textContent = String(state.score);
+  }
+
+  if (previous.status === "ready" && state.status === "playing" && state.mode === "timeAttack") {
+    timerBarEl.style.setProperty("--round-duration", `${TIME_ATTACK_DURATION_MS}ms`);
+    timerBarEl.classList.remove("running");
+    void timerBarEl.offsetWidth; // reflow, so re-adding the class restarts the animation
+    timerBarEl.classList.add("running");
+  }
 
   laneEls.forEach((lane, index) => {
     const active = state.status === "playing" && state.activeLane === index;
@@ -67,18 +89,29 @@ function render(previous: GameState): void {
     outcomeEl.textContent = "You win!";
     tone(880, 300);
   }
+  if (state.status === "finished" && previous.status !== "finished") {
+    outcomeEl.textContent = `Caught ${state.score}.`;
+    tone(440, 250);
+  }
 }
 
 catEl.addEventListener("animationend", () => catEl.classList.remove("pounce", "startled"));
 
+const TERMINAL_STATUSES: GameState["status"][] = ["lost", "won", "finished"];
+
+function resetToReady(): void {
+  const previous = state;
+  state = createGame();
+  catEl.classList.remove("pounce", "startled");
+  laneEls.forEach((lane) => lane.classList.remove("active", "catch", "miss"));
+  timerBarEl.classList.remove("running");
+  outcomeEl.textContent = "";
+  render(previous);
+}
+
 function handleKey(event: KeyboardEvent): void {
-  if (state.status === "lost" || state.status === "won") {
-    const previous = state;
-    state = createGame();
-    catEl.classList.remove("pounce", "startled");
-    laneEls.forEach((lane) => lane.classList.remove("active", "catch", "miss"));
-    outcomeEl.textContent = "";
-    render(previous);
+  if (TERMINAL_STATUSES.includes(state.status)) {
+    resetToReady();
     return;
   }
 
@@ -90,6 +123,15 @@ function handleKey(event: KeyboardEvent): void {
   state = press(state, lane, performance.now());
   render(previous);
 }
+
+timeAttackBtn.addEventListener("click", () => {
+  if (TERMINAL_STATUSES.includes(state.status)) {
+    resetToReady();
+  }
+  const previous = state;
+  state = startTimeAttack(state, performance.now());
+  render(previous);
+});
 
 function loop(now: number): void {
   const previous = state;
