@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { JSDOM } from "jsdom";
 import { describe, expect, it } from "vitest";
+import { createGame, press, tick } from "../game-logic.ts";
 
 // Contract tests for crit 5 ("A game"). These answer the published spec at
 // https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/crits/05-game/
@@ -46,15 +47,50 @@ describe("self-teaching: no instructions anywhere", () => {
 describe("losable: play can end in a win, loss, or finish", () => {
   // Contract, not implementation: whatever the mechanic, the built game must
   // expose its outcome somewhere a test (and a screen reader) can read it.
-  // TODO once the mechanic is chosen: wire `#game` (or your root element) to
-  // set `data-status="playing" | "won" | "lost"` and update this test to
-  // drive a real losing move instead of just checking the initial state.
   const home = pages.find(({ name }) => name === "index.html");
 
   it("exposes a game status the test suite can read", () => {
     const status = home?.doc.querySelector("[data-status]");
-    expect(status, "no element with [data-status] found — see the TODO above").toBeTruthy();
+    expect(status, "no element with [data-status] found").toBeTruthy();
   });
 
-  it.todo("a losing move sets data-status to a terminal value (won/lost)");
+  // The rest of this block tests game-logic.ts directly rather than the
+  // built HTML: simulating real keyboard timing through a static DOM isn't
+  // practical, and the state machine is exactly the "contract" these lines
+  // are checking — the DOM only needs to reflect whatever it decides.
+  it("three missed catches end the round in a loss", () => {
+    let state = createGame();
+    let now = 0;
+    state = press(state, 1, now); // any lane starts the round
+
+    for (let i = 0; i < 3; i++) {
+      now += state.interval + 1; // let the active prompt's window lapse
+      state = tick(state, now);
+    }
+
+    expect(state.status).toBe("lost");
+  });
+
+  it("pressing the wrong lane counts as a miss, not a free pass", () => {
+    let state = createGame();
+    state = press(state, 0, 0); // start
+    const wrongLane = (state.activeLane! + 1) % 3;
+
+    state = press(state, wrongLane, 1);
+
+    expect(state.misses).toBe(1);
+  });
+
+  it("enough catches end the round in a win", () => {
+    let state = createGame();
+    let now = 0;
+    state = press(state, 0, now); // start
+
+    while (state.status === "playing") {
+      now += 1;
+      state = press(state, state.activeLane!, now);
+    }
+
+    expect(state.status).toBe("won");
+  });
 });
