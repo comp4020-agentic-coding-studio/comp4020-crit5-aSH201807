@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>COMP4020 prototype</title>
+    <title>Cat vs. Laser</title>
     <meta
       name="description"
-      content="Replace this with one sentence saying what this page is. A search result and a link preview both show it."
+      content="A three-lane reflex game: help the cat catch the laser before it gets away."
     />
 
     <!--
@@ -27,11 +27,16 @@
       </nav>
     </header>
     <main>
-      <h1>COMP4020 prototype</h1>
-      <p>
-        Replace this with your prototype. This week's brief is on the course website;
-        <code>spec/README.md</code> explains how the checks in this repo relate to it.
-      </p>
+      <h1 class="sr-only">Cat vs. Laser</h1>
+      <div id="game" data-status="ready" tabindex="0">
+        <div class="lanes">
+          <div class="lane" data-lane="0"><span class="cue"></span></div>
+          <div class="lane" data-lane="1"><span class="cue"></span></div>
+          <div class="lane" data-lane="2"><span class="cue"></span></div>
+        </div>
+        <div class="cat" aria-hidden="true">🐱</div>
+      </div>
+      <p id="outcome" role="status" aria-live="polite" class="sr-only"></p>
     </main>
     <script type="module" src="./main.ts"></script>
   </body>
