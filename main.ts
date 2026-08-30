@@ -9,6 +9,7 @@ import {
 
 const gameEl = document.querySelector<HTMLElement>("#game")!;
 const laneEls = Array.from(gameEl.querySelectorAll<HTMLElement>(".lane"));
+const lifeEls = Array.from(gameEl.querySelectorAll<HTMLElement>(".life"));
 const catEl = gameEl.querySelector<HTMLElement>(".cat")!;
 const outcomeEl = document.querySelector<HTMLElement>("#outcome")!;
 const resetLink = document.querySelector<HTMLAnchorElement>("#reset")!;
@@ -51,6 +52,8 @@ function render(previous: GameState): void {
 
   if (state.mode === "timeAttack") {
     scoreEl.textContent = String(state.score);
+  } else {
+    lifeEls.forEach((life, index) => life.classList.toggle("lost", index < state.misses));
   }
 
   if (previous.status === "ready" && state.status === "playing" && state.mode === "timeAttack") {

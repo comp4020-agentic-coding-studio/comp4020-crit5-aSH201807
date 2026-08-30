@@ -7,7 +7,7 @@ export type Mode = "survival" | "timeAttack";
 
 export const LANE_COUNT = 3;
 
-const MAX_MISSES = 3;
+export const MAX_MISSES = 3;
 const WIN_SCORE = 15;
 const START_INTERVAL_MS = 1100;
 const MIN_INTERVAL_MS = 450;

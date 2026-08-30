@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { JSDOM } from "jsdom";
 import { describe, expect, it } from "vitest";
-import { createGame, press, startTimeAttack, tick, TIME_ATTACK_DURATION_MS } from "../game-logic.ts";
+import { createGame, MAX_MISSES, press, startTimeAttack, tick, TIME_ATTACK_DURATION_MS } from "../game-logic.ts";
 
 // Contract tests for crit 5 ("A game"). These answer the published spec at
 // https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/crits/05-game/
@@ -92,6 +92,15 @@ describe("losable: play can end in a win, loss, or finish", () => {
     }
 
     expect(state.status).toBe("won");
+  });
+});
+
+describe("survival: a visible life count", () => {
+  const home = pages.find(({ name }) => name === "index.html");
+
+  it("shows exactly as many life icons as survival mode allows misses", () => {
+    const lives = home?.doc.querySelectorAll(".life");
+    expect(lives?.length).toBe(MAX_MISSES);
   });
 });
 

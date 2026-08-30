@@ -42,6 +42,35 @@ a {
   border-radius: 1rem;
 }
 
+/* Survival mode's life count — hidden in time attack, where misses don't
+   end the round and the live score readout is the feedback instead. */
+.lives {
+  display: none;
+  gap: 0.4rem;
+}
+
+#game[data-mode="survival"] .lives {
+  display: flex;
+}
+
+.life {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: crimson;
+  stroke: crimson;
+  stroke-width: 1;
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease,
+    transform 0.2s ease;
+}
+
+.life.lost {
+  fill: none;
+  stroke: #ccc;
+  transform: scale(0.8);
+}
+
 .lanes {
   display: flex;
   gap: 2rem;
