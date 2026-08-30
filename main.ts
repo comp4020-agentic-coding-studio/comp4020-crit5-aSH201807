@@ -11,6 +11,7 @@ const gameEl = document.querySelector<HTMLElement>("#game")!;
 const laneEls = Array.from(gameEl.querySelectorAll<HTMLElement>(".lane"));
 const catEl = gameEl.querySelector<HTMLElement>(".cat")!;
 const outcomeEl = document.querySelector<HTMLElement>("#outcome")!;
+const resetLink = document.querySelector<HTMLAnchorElement>("#reset")!;
 const timeAttackBtn = document.querySelector<HTMLButtonElement>(".mode-timeattack")!;
 const timerBarEl = document.querySelector<HTMLElement>("#timer-bar")!;
 const scoreEl = document.querySelector<HTMLElement>("#score")!;
@@ -110,6 +111,13 @@ function resetToReady(): void {
 }
 
 function handleKey(event: KeyboardEvent): void {
+  // A round in progress doesn't have to run to completion — Escape bails
+  // out to "ready" from anywhere, same as the reset link.
+  if (event.key === "Escape" && state.status !== "ready") {
+    resetToReady();
+    return;
+  }
+
   if (TERMINAL_STATUSES.includes(state.status)) {
     resetToReady();
     return;
@@ -125,12 +133,17 @@ function handleKey(event: KeyboardEvent): void {
 }
 
 timeAttackBtn.addEventListener("click", () => {
-  if (TERMINAL_STATUSES.includes(state.status)) {
+  if (state.status !== "ready") {
     resetToReady();
   }
   const previous = state;
   state = startTimeAttack(state, performance.now());
   render(previous);
+});
+
+resetLink.addEventListener("click", (event) => {
+  event.preventDefault();
+  resetToReady();
 });
 
 function loop(now: number): void {
