@@ -48,6 +48,7 @@ a {
 }
 
 .lane {
+  position: relative;
   width: 4rem;
   height: 4rem;
   border-radius: 50%;
@@ -56,6 +57,22 @@ a {
   align-items: center;
   justify-content: center;
   transition: border-color 0.2s ease;
+}
+
+/* Hollow key-direction hint, always on — the spatial mapping (left lane =
+   left arrow key, etc.) is meant to be read off the circle, not told. */
+.lane .arrow {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: #aaa;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 
 .lane .cue {
