@@ -1,61 +1,47 @@
 # Process overview
 
-<!-- TEMPLATE: this file is a shape to fill in, not a form. Replace everything
-     in it with your own overview, and delete this comment — `pnpm
-     check:evidence` will remind you if it's still here. -->
-
-A reading-guide to how the work came together --- a map to your process, not an
-essay about it. Markers read this file and follow its citations; they don't
-trawl the repo for evidence you didn't point at, so if a moment mattered, cite
-it.
-
-This file is the shape; the course site's
-[assessment page](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#what-you-submit)
-is the requirement, and its
-[word counts](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#word-counts)
-cover every deliverable.
-
 ## What I built
 
-One paragraph: the thing, and the idea behind it.
+"Cat vs. Laser" — a three-lane reflex game mapped to the left/up/right arrow
+keys, with no on-screen instructions: the opening screen has to teach the first
+move by itself. It ships two modes reachable from the same "ready" screen —
+Survival (three misses end the round, fifteen catches win, speed ramps up per
+catch) and Time Attack (a fixed 30-second round where misses don't end play and
+catches accumulate as a score) — built on one shared state machine rather than
+two separate game engines.
 
 ## The moments that mattered
 
-Three or four for an assignment; fewer is fine for a weekly prototype. Keep the
-list short so each moment has room to do all four jobs:
+1. **A pure state machine before any DOM.** The spec's "self-teaching" and
+   "losable" lines both needed contract tests, but simulating real keyboard
+   timing through a rendered page isn't practical to assert against. Instead
+   of testing through the DOM, I pulled all the rules — lanes, misses, wins,
+   timing — into `game-logic.ts` as functions with no DOM or timer access
+   (`press`, `tick`, `createGame`), and only wired that state machine into the
+   page afterwards. `pnpm check` exercises the rules directly with synthetic
+   timestamps, and `main.ts` ended up as a thin renderer with exactly one place
+   the rules live.
+   [`03fe7bf`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-aSH201807/commit/03fe7bf0b4d697425417c3ac0762a5037381760f)
 
-1. **what happened** --- the problem, or the thing that went wrong
-2. **what you did instead of the obvious thing** --- the call you made, and why
-   it beat the obvious one
-3. **how you knew it was right** --- the check you ran, the viewport you looked
-   at, what you read before accepting the diff
-4. **the citation** --- a commit or commit range, a `CLAUDE.md` change, a check
-   that went from red to green, a prompt paired with the commit it produced
+2. **Bailing out beats pausing, given the deadline.** Once Time Attack existed
+   alongside Survival, I needed a way to let a player quit or reset mid-round.
+   The complete version — true pause/resume with frozen timers and a countdown
+   that resumes exactly where it left off — would have meant tracking paused
+   offsets against both a miss-based and a clock-based mode. I chose the
+   cheaper option instead: Escape, the Reset link, or the hourglass icon all
+   fully abandon the round and return to "ready", with no frozen state to get
+   wrong. Named against the two-day deadline, the complexity the full version
+   would add wasn't worth it for a prototype no one needs to resume later.
+   [`6cc698e`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-aSH201807/commit/6cc698e5f53dc6bf4d8058e9d5aa029fa41b1665)
 
-Jobs 2 and 3 are the ones the repo can't tell a reader on its own, so they're
-where the marks are. The strongest moments are the ones where a correction
-landed in the **harness** --- the standards and checks your work has to satisfy
---- rather than in a retry: a rule added to `CLAUDE.md`, a check wired up, an
-attempt thrown away. Retrying until it passes is the routine case, and changing
-what the work runs against is the skilled one.
-
-Cite each moment as a link whose text is the commit hash or range and whose
-target is this repo's commit or compare URL, so a reader clicks straight to the
-evidence:
-
-- one commit: [`a1b2c3d`](https://github.com/YOUR-ORG/YOUR-REPO/commit/a1b2c3d)
-- a range:
-  [`a1b2c3d...e4f5a6b`](https://github.com/YOUR-ORG/YOUR-REPO/compare/a1b2c3d...e4f5a6b)
-
-To pair a prompt with the commit it produced, quote the prompt (curated, not a
-full transcript) next to the citation:
-
-> the prompt, verbatim
-
-Screenshots are welcome where one carries the verification better than a
-sentence does. Commit the file to this repo and link it with a **relative**
-path, which is what makes it render on GitHub: `![alt text](docs/before.png)`.
-Images don't count towards the word count and don't replace the citation.
+3. **A test that stops two numbers from drifting apart.** The visible
+   life-count icons (three hearts above the lanes) and the actual loss
+   condition (`MAX_MISSES` in `game-logic.ts`) are two independent places that
+   both say "three." Rather than trust myself to update both if the rule ever
+   changed, I added a contract test asserting the rendered icon count equals
+   `MAX_MISSES`, so a future change to the difficulty can't silently leave the
+   display lying about how many lives are left.
+   [`391432a`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-aSH201807/commit/391432aee08f363221593a0c3041a1c281a419b4)
 
 ## Before you ship
 
