@@ -104,6 +104,15 @@ describe("survival: a visible life count", () => {
   });
 });
 
+describe("result screen: the outcome text is visible, not screen-reader-only", () => {
+  const home = pages.find(({ name }) => name === "index.html");
+
+  it("#outcome doesn't carry the sr-only class", () => {
+    const outcome = home?.doc.querySelector("#outcome");
+    expect(outcome?.classList.contains("sr-only")).toBe(false);
+  });
+});
+
 describe("time attack: a second mode, clock-driven instead of lives-driven", () => {
   it("misses don't end a time-attack round", () => {
     let state = createGame();

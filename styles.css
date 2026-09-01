@@ -1,18 +1,93 @@
+:root {
+  --bg: #dedad1; /* page background, study-room paper/wood neutral */
+  --surface: #f3f1ec; /* the "stage" panel — the pane of glass */
+  --ink: #1a1816; /* text, borders-when-solid, focus outline */
+  --muted: #a9a398; /* dashed/inactive borders, idle strokes */
+  --danger: #d6231f; /* the one accent: the laser itself, misses, timer */
+  --success: #ffffff; /* a catch reads as a flash of light on the glass */
+}
+
 body {
   margin: 0;
   padding: 2rem;
   font-family: system-ui, sans-serif;
   line-height: 1.6;
-  color: #1a1a1a;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+/* Two oversized, decorative panes behind everything. A mousemove listener
+   in main.ts drives --mx/--my (roughly -1..1); each layer's own --depth
+   sets how far it drifts, and the differential between them is what reads
+   as depth. Motion is opt-in via the media query below. */
+.bg-layer {
+  position: fixed;
+  inset: -10%;
+  pointer-events: none;
+}
+
+/* A window's worth of light, high and to one side of the room. */
+.bg-window {
+  --depth: 8;
+  background: radial-gradient(55% 45% at 22% 10%, rgba(255, 255, 255, 0.6) 0%, transparent 65%);
+}
+
+/* Faint vertical rules, like book spines on a shelf, giving the room texture
+   without drawing an actual bookshelf. */
+.bg-shelves {
+  --depth: 20;
+  background-image: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 16px);
+  opacity: 0.05;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bg-layer {
+    transform: translate(calc(var(--mx, 0) * var(--depth) * 1px), calc(var(--my, 0) * var(--depth) * 1px));
+    transition: transform 0.2s ease-out;
+  }
 }
 
 main {
   max-width: 40rem;
   margin: 0 auto;
+  position: relative;
 }
 
 a {
-  color: #0b5fff;
+  color: var(--ink);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 40rem;
+  margin: 0 auto 1.5rem;
+  position: relative;
+}
+
+header h1 {
+  margin: 0;
+  font-family: "Baloo 2", system-ui, sans-serif;
+  font-size: 1.4rem;
+  color: var(--ink);
+}
+
+nav a#reset {
+  text-decoration: none;
+  color: var(--ink);
+  padding: 0.35rem 0.9rem;
+  border: 2px dashed var(--muted);
+  border-radius: 999px;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+nav a#reset:hover,
+nav a#reset:focus-visible {
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 .sr-only {
@@ -27,17 +102,70 @@ a {
   border: 0;
 }
 
+/* The stage is the pane of glass: the laser lands on this side, the cat
+   watches from the other side. #game::after is the glass's own reflection,
+   a diagonal streak sitting above everything else in the stage. */
 #game {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2.5rem;
   padding: 3rem 1rem;
   outline: none;
+  background: var(--surface);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 1.5rem 3rem -1rem rgba(26, 24, 22, 0.3);
+}
+
+#game::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.55) 50%, transparent 62%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* The first move is taught, not told: before any input, the whole stage
+   breathes with a faint red-tinted glow — the laser's about to land — while
+   all three lanes ripple in turn, showing there's more than one door in. */
+#game[data-status="ready"] {
+  animation: invite 2.4s ease-in-out infinite;
+}
+
+/* The result screen: invisible and inert until a round ends, then a
+   centered overlay states the outcome — no separate "play again" control,
+   since any lane key both dismisses it and starts a new round. */
+#outcome {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  max-width: 90%;
+  text-align: center;
+  font-family: "Baloo 2", system-ui, sans-serif;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: rgba(246, 238, 218, 0.95);
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+#game[data-status="lost"] #outcome,
+#game[data-status="won"] #outcome,
+#game[data-status="finished"] #outcome {
+  opacity: 1;
 }
 
 #game:focus-visible {
-  outline: 2px solid #0b5fff;
+  outline: 2px solid var(--ink);
   outline-offset: 6px;
   border-radius: 1rem;
 }
@@ -56,8 +184,8 @@ a {
 .life {
   width: 1.4rem;
   height: 1.4rem;
-  fill: crimson;
-  stroke: crimson;
+  fill: var(--danger);
+  stroke: var(--danger);
   stroke-width: 1;
   transition:
     fill 0.2s ease,
@@ -67,7 +195,7 @@ a {
 
 .life.lost {
   fill: none;
-  stroke: #ccc;
+  stroke: var(--muted);
   transform: scale(0.8);
 }
 
@@ -81,7 +209,7 @@ a {
   width: 4rem;
   height: 4rem;
   border-radius: 50%;
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,7 +225,7 @@ a {
   width: 1.5rem;
   height: 1.5rem;
   fill: none;
-  stroke: #aaa;
+  stroke: var(--muted);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -108,20 +236,33 @@ a {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: crimson;
+  background: var(--danger);
   opacity: 0;
   transform: scale(1);
 }
 
 /* A gentle, always-on pulse in the middle lane before the first press — the
    visual invitation to try touching it, with no text anywhere. */
-#game[data-status="ready"] .lane[data-lane="1"] .cue {
+#game[data-status="ready"] .lane .cue {
   opacity: 0.8;
+  background: var(--ink);
   animation: pulse 1.4s ease-in-out infinite;
 }
 
+#game[data-status="ready"] .lane[data-lane="0"] .cue {
+  animation-delay: 0s;
+}
+
+#game[data-status="ready"] .lane[data-lane="1"] .cue {
+  animation-delay: 0.15s;
+}
+
+#game[data-status="ready"] .lane[data-lane="2"] .cue {
+  animation-delay: 0.3s;
+}
+
 .lane.active {
-  border-color: crimson;
+  border-color: var(--danger);
 }
 
 .lane.active .cue {
@@ -130,6 +271,8 @@ a {
 }
 
 .lane.catch .cue {
+  background: var(--success);
+  box-shadow: 0 0 16px 6px rgba(255, 255, 255, 0.8);
   animation: caught 0.25s ease-out forwards;
 }
 
@@ -138,9 +281,31 @@ a {
 }
 
 .cat {
-  font-size: 4rem;
-  line-height: 1;
-  display: inline-block;
+  width: 5.5rem;
+  height: 5rem;
+  overflow: visible;
+}
+
+.cat path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Bean eyes: small solid dots, not strokes — the one filled shape in an
+   otherwise stroke-only icon. */
+.cat-eye {
+  fill: var(--ink);
+}
+
+.paw-left {
+  transform-origin: 32px 82px;
+}
+
+.paw-right {
+  transform-origin: 64px 82px;
 }
 
 /* Time-attack round clock: only shown once that mode is actually running. */
@@ -148,7 +313,7 @@ a {
   display: none;
   width: 10rem;
   height: 0.35rem;
-  background: #eee;
+  background: var(--muted);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -160,7 +325,7 @@ a {
 #timer-bar > div {
   height: 100%;
   width: 100%;
-  background: crimson;
+  background: var(--danger);
   transform-origin: left;
 }
 
@@ -172,9 +337,10 @@ a {
 #score {
   display: none;
   margin: 0;
-  font-size: 1.5rem;
+  font-family: "Baloo 2", system-ui, sans-serif;
+  font-size: 1.6rem;
   font-weight: 600;
-  color: #333;
+  color: var(--ink);
 }
 
 #game[data-mode="timeAttack"] #score {
@@ -189,7 +355,7 @@ a {
   padding: 0;
   width: 2.75rem;
   height: 2.75rem;
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--muted);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -200,14 +366,14 @@ a {
 
 .mode-timeattack:hover,
 .mode-timeattack:focus-visible {
-  border-color: crimson;
+  border-color: var(--danger);
 }
 
 .hourglass {
   width: 1.4rem;
   height: 1.4rem;
   fill: none;
-  stroke: #aaa;
+  stroke: var(--muted);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -217,8 +383,11 @@ a {
   animation: idle-bounce 1.6s ease-in-out infinite;
 }
 
-.cat.pounce {
-  animation: pounce 0.25s ease-out;
+/* Facing the player, a catch reads as both paws pressing up against the
+   glass toward the laser, not a side-on swipe. */
+.cat.pounce .paw-left,
+.cat.pounce .paw-right {
+  animation: paw-press 0.25s ease-out;
 }
 
 .cat.startled {
@@ -239,6 +408,18 @@ a {
   opacity: 0.4;
 }
 
+@keyframes invite {
+  0%,
+  100% {
+    box-shadow: 0 1.5rem 3rem -1rem rgba(26, 24, 22, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 1.5rem 3rem -1rem rgba(26, 24, 22, 0.3),
+      0 0 0 6px rgba(214, 35, 31, 0.15);
+  }
+}
+
 @keyframes pulse {
   0%,
   100% {
@@ -254,11 +435,11 @@ a {
 @keyframes countdown {
   from {
     transform: scale(1);
-    background: gold;
+    background: var(--ink);
   }
   to {
     transform: scale(0.2);
-    background: crimson;
+    background: var(--danger);
   }
 }
 
@@ -286,15 +467,15 @@ a {
   }
 }
 
-@keyframes pounce {
+@keyframes paw-press {
   0% {
-    transform: scale(1) rotate(0);
+    transform: translateY(0) scale(1);
   }
   50% {
-    transform: scale(1.3) rotate(-8deg);
+    transform: translateY(-6px) scale(1.15);
   }
   100% {
-    transform: scale(1) rotate(0);
+    transform: translateY(0) scale(1);
   }
 }
 

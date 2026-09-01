@@ -18,16 +18,24 @@
     <meta property="og:image" content="./card.png" />
     <meta name="twitter:card" content="summary_large_image" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div class="bg-layer bg-window" aria-hidden="true"></div>
+    <div class="bg-layer bg-shelves" aria-hidden="true"></div>
     <header>
+      <h1>Cat vs. Laser</h1>
       <nav aria-label="Primary">
         <a href="./" id="reset">Reset</a>
       </nav>
     </header>
     <main>
-      <h1 class="sr-only">Cat vs. Laser</h1>
       <div id="game" data-status="ready" tabindex="0">
         <div class="lives" aria-hidden="true">
           <svg class="life" viewBox="0 0 24 24">
@@ -60,7 +68,19 @@
             <span class="cue"></span>
           </div>
         </div>
-        <div class="cat" aria-hidden="true">🐱</div>
+        <p id="outcome" role="status" aria-live="polite"></p>
+        <svg class="cat" aria-hidden="true" viewBox="0 0 96 88">
+          <path class="cat-tail" d="M74 58c10 3 13 12 4 18" />
+          <path class="cat-silhouette" d="M26 82Q14 66 18 54Q14 42 22 34Q26 20 32 18Q38 24 48 26Q58 24 64 18Q70 20 74 34Q82 42 78 54Q82 66 70 82" />
+          <ellipse class="cat-eye" cx="38" cy="48" rx="3" ry="4" />
+          <ellipse class="cat-eye" cx="58" cy="48" rx="3" ry="4" />
+          <path class="cat-whisker" d="M20 52h-16" />
+          <path class="cat-whisker" d="M22 60 6 64" />
+          <path class="cat-whisker" d="M76 52h16" />
+          <path class="cat-whisker" d="M74 60 90 64" />
+          <path class="paw-left" d="M32 82c-4 4 -10 4 -14 0" />
+          <path class="paw-right" d="M64 82c4 4 10 4 14 0" />
+        </svg>
         <div id="timer-bar" aria-hidden="true"><div></div></div>
         <p id="score" aria-hidden="true"></p>
         <button type="button" class="mode-timeattack">
@@ -73,7 +93,6 @@
           </svg>
         </button>
       </div>
-      <p id="outcome" role="status" aria-live="polite" class="sr-only"></p>
     </main>
     <script type="module" src="./main.ts"></script>
   </body>

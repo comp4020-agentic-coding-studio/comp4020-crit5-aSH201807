@@ -103,13 +103,20 @@ catEl.addEventListener("animationend", () => catEl.classList.remove("pounce", "s
 
 const TERMINAL_STATUSES: GameState["status"][] = ["lost", "won", "finished"];
 
-function resetToReady(): void {
-  const previous = state;
-  state = createGame();
+// Shared by a full bail-out and a terminal-state restart: wipes whatever a
+// finished round left on screen (flashes, the timer bar, the result text)
+// so the next render starts from a clean slate.
+function clearRoundVisuals(): void {
   catEl.classList.remove("pounce", "startled");
   laneEls.forEach((lane) => lane.classList.remove("active", "catch", "miss"));
   timerBarEl.classList.remove("running");
   outcomeEl.textContent = "";
+}
+
+function resetToReady(): void {
+  const previous = state;
+  state = createGame();
+  clearRoundVisuals();
   render(previous);
 }
 
@@ -121,16 +128,18 @@ function handleKey(event: KeyboardEvent): void {
     return;
   }
 
-  if (TERMINAL_STATUSES.includes(state.status)) {
-    resetToReady();
-    return;
-  }
-
   const lane = KEY_TO_LANE[event.key];
   if (lane === undefined) return;
   event.preventDefault();
 
   const previous = state;
+  // The same key that ends a round also starts the next one — otherwise the
+  // first press after a win/loss/finish silently resets and does nothing
+  // visible, and a second press is needed to actually start playing again.
+  if (TERMINAL_STATUSES.includes(state.status)) {
+    state = createGame();
+    clearRoundVisuals();
+  }
   state = press(state, lane, performance.now());
   render(previous);
 }
@@ -159,3 +168,24 @@ function loop(now: number): void {
 document.addEventListener("keydown", handleKey);
 gameEl.focus();
 requestAnimationFrame(loop);
+
+// Decorative depth-of-field on the background layers (see .bg-layer in
+// styles.css) — skipped entirely for anyone who's asked for less motion.
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const root = document.documentElement;
+  let latestX = 0;
+  let latestY = 0;
+  let queued = false;
+
+  document.addEventListener("mousemove", (event) => {
+    latestX = event.clientX;
+    latestY = event.clientY;
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      root.style.setProperty("--mx", String(latestX / window.innerWidth - 0.5));
+      root.style.setProperty("--my", String(latestY / window.innerHeight - 0.5));
+    });
+  });
+}
