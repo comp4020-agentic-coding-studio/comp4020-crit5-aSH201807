@@ -43,6 +43,27 @@ two separate game engines.
    display lying about how many lives are left.
    [`391432a`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-aSH201807/commit/391432aee08f363221593a0c3041a1c281a419b4)
 
+4. **`aria-live="polite"` isn't the same as visible.** The win/loss/finish
+   text had a real element and a real screen-reader announcement, but the
+   class on it was `sr-only` — so a sighted player who lost saw nothing on
+   screen explaining why the round ended. "Losable" needs the outcome to
+   actually be seen, not just be present in the accessibility tree, so I gave
+   it a visible on-stage overlay and added a contract test
+   (`spec/game.test.ts`, "result screen") asserting `#outcome` never carries
+   that class again.
+   [`814e037`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-aSH201807/commit/814e0374a75ec3fa6c4e1dc36292ac1def27e6be)
+
+5. **Turning down a literal instruction without turning down the request.**
+   Asked for a clear "press a key to start" prompt, I had a real constraint to
+   name: the self-teaching contract test forbids almost that exact phrase, by
+   design — the brief wants the opening screen to teach the first move
+   without telling it. Rather than silently add the text (breaking the test)
+   or silently ignore the ask, I said why, then built the non-text version of
+   the same idea: all three lane cues ripple in a staggered pulse before the
+   first press, with a breathing glow on the whole stage, escalating a cue
+   that was already there instead of inventing a new mechanic.
+   [`814e037`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-aSH201807/commit/814e0374a75ec3fa6c4e1dc36292ac1def27e6be)
+
 ## Before you ship
 
 `pnpm check:evidence` verifies your citations resolve to real commits, that a
